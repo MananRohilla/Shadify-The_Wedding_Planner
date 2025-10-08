@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
+// import 'services/offline_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env", isOptional: true);
-
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-  );
-
   runApp(const WeddingPlannerApp());
 }
 
-final supabase = Supabase.instance.client;
+
 
 class WeddingPlannerApp extends StatelessWidget {
   const WeddingPlannerApp({super.key});
@@ -37,15 +33,17 @@ class WeddingPlannerApp extends StatelessWidget {
           secondary: const Color(0xFFF8BBD0),
           tertiary: const Color(0xFFFFD700),
         ),
-        textTheme: GoogleFonts.poppinsTextTheme(),
-        appBarTheme: AppBarTheme(
+        // Using system fonts instead of Google Fonts to avoid network dependency
+        fontFamily: 'Roboto', // Use system font
+        appBarTheme: const AppBarTheme(
           elevation: 0,
           backgroundColor: Colors.transparent,
-          foregroundColor: const Color(0xFFE91E63),
-          titleTextStyle: GoogleFonts.poppins(
+          foregroundColor: Color(0xFFE91E63),
+          titleTextStyle: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFFE91E63),
+            color: Color(0xFFE91E63),
+            fontFamily: 'Roboto',
           ),
         ),
         cardTheme: CardThemeData(

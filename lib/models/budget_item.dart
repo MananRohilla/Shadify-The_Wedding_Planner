@@ -27,8 +27,16 @@ class BudgetItem {
       allocatedAmount: (json['allocated_amount'] ?? 0).toDouble(),
       spentAmount: (json['spent_amount'] ?? 0).toDouble(),
       percentage: (json['percentage'] ?? 0).toDouble(),
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] != null 
+          ? (json['created_at'] is String 
+              ? DateTime.parse(json['created_at'])
+              : (json['created_at']).toDate())
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null 
+          ? (json['updated_at'] is String 
+              ? DateTime.parse(json['updated_at'])
+              : (json['updated_at']).toDate())
+          : DateTime.now(),
     );
   }
 

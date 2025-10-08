@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import '../services/auth_service.dart';
+// import '../services/auth_service.dart';
+import '../services/offline_service.dart';
 import 'checklist/checklist_screen.dart';
 import 'venues/venues_screen.dart';
 import 'budget/budget_screen.dart';
@@ -14,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _authService = AuthService();
+  // final _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFFE91E63)),
             onPressed: () async {
-              await _authService.signOut();
+              // Using offline mock service for development
+              await MockAuthService.signOut();
               if (mounted) {
                 Navigator.pushReplacementNamed(context, '/login');
               }

@@ -33,8 +33,16 @@ class Guest {
       rsvpStatus: json['rsvp_status'] ?? 'pending',
       plusOne: json['plus_one'] ?? false,
       dietaryRestrictions: json['dietary_restrictions'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] != null 
+          ? (json['created_at'] is String 
+              ? DateTime.parse(json['created_at'])
+              : (json['created_at']).toDate())
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null 
+          ? (json['updated_at'] is String 
+              ? DateTime.parse(json['updated_at'])
+              : (json['updated_at']).toDate())
+          : DateTime.now(),
     );
   }
 

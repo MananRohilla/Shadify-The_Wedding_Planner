@@ -50,13 +50,19 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
 
     try {
       if (widget.guest == null) {
-        await _guestService.createGuest(
+        final newGuest = Guest(
+          id: '',
+          userId: '',
           name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          phone: _phoneController.text.trim(),
+          email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+          rsvpStatus: 'pending',
           plusOne: _plusOne,
-          dietaryRestrictions: _dietaryController.text.trim(),
+          dietaryRestrictions: _dietaryController.text.trim().isEmpty ? null : _dietaryController.text.trim(),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
+        await _guestService.addGuest(newGuest);
       } else {
         await _guestService.updateGuest(
           widget.guest!.copyWith(

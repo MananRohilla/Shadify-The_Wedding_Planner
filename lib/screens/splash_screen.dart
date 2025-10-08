@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:animations/animations.dart';
-import '../main.dart';
+// import '../main.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,10 +38,13 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final session = supabase.auth.currentSession;
-    if (session != null) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
+    // Using offline service instead of Firebase for development
+    // Check if user is logged in via our mock service
+    try {
+      // For now, always navigate to login screen in offline mode
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      // If there's any error, navigate to login
       Navigator.pushReplacementNamed(context, '/login');
     }
   }

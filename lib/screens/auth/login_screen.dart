@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+// import '../../services/auth_service.dart';
+import '../../services/offline_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,7 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
+  // final _authService = AuthService();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -30,9 +31,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await _authService.signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      // Using offline mock service for development
+      await MockAuthService.signIn(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
 
       if (mounted) {

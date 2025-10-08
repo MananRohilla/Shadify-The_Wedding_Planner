@@ -1,57 +1,50 @@
-import '../main.dart';
+﻿// import 'package:cloud_firestore/cloud_firestore.dart';
+// import '../main.dart';
 import '../models/budget_item.dart';
+import 'offline_service.dart';
 
 class BudgetService {
+  // Using offline mock service for development
+  
   Future<List<BudgetItem>> getBudgetItems() async {
-    final userId = supabase.auth.currentUser?.id;
-    if (userId == null) return [];
+    if (!MockAuthService.isLoggedIn) return [];
 
-    final response = await supabase
-        .from('budget_items')
-        .select()
-        .eq('user_id', userId)
-        .order('category');
-
-    return (response as List).map((item) => BudgetItem.fromJson(item)).toList();
+    final mockData = await MockDataService.getCollectionAsync('budget_items');
+    
+    return mockData
+        .map((data) => BudgetItem.fromJson(data))
+        .toList();
   }
 
-  Future<BudgetItem> createBudgetItem({
-    required String category,
-    required double allocatedAmount,
-    required double percentage,
-  }) async {
-    final userId = supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not authenticated');
+  Future<String> addBudgetItem(BudgetItem item) async {
+    if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
 
-    final response = await supabase
-        .from('budget_items')
-        .insert({
-          'user_id': userId,
-          'category': category,
-          'allocated_amount': allocatedAmount,
-          'spent_amount': 0,
-          'percentage': percentage,
-        })
-        .select()
-        .single();
-
-    return BudgetItem.fromJson(response);
+    final data = item.toJson();
+    data.remove('id'); // Remove id as it will be generated
+    
+    final docId = await MockDataService.addDocument('budget_items', data);
+    return docId;
   }
 
   Future<void> updateBudgetItem(BudgetItem item) async {
-    await supabase.from('budget_items').update({
-      'allocated_amount': item.allocatedAmount,
-      'spent_amount': item.spentAmount,
-      'percentage': item.percentage,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', item.id);
+    if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
+    if (item.id.isEmpty) throw Exception('Item ID is required');
+
+    final data = item.toJson();
+    data.remove('id'); // Don't update the ID field
+    
+    await MockDataService.updateDocument('budget_items', item.id, data);
   }
 
   Future<void> deleteBudgetItem(String itemId) async {
-    await supabase.from('budget_items').delete().eq('id', itemId);
+    if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
+
+    await MockDataService.deleteDocument('budget_items', itemId);
   }
 
   Future<void> createDefaultBudget(double totalBudget) async {
+    if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
+    
     final defaultCategories = {
       'Venue': 30.0,
       'Catering': 25.0,
@@ -64,20 +57,43 @@ class BudgetService {
 
     for (var entry in defaultCategories.entries) {
       final allocatedAmount = (totalBudget * entry.value) / 100;
-      await createBudgetItem(
+      final budgetItem = BudgetItem(
+        id: '',
+        userId: MockAuthService.currentUserEmail ?? '',
         category: entry.key,
         allocatedAmount: allocatedAmount,
+        spentAmount: 0.0,
         percentage: entry.value,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
+      await addBudgetItem(budgetItem);
     }
   }
 
+  Future<double> getTotalBudget() async {
+    final items = await getBudgetItems();
+    return items.fold<double>(0.0, (sum, item) => sum + item.allocatedAmount);
+  }
+
+  Future<double> getTotalSpent() async {
+    final items = await getBudgetItems();
+    return items.fold<double>(0.0, (sum, item) => sum + item.spentAmount);
+  }
+
+  Future<double> getRemainingBudget() async {
+    final totalBudget = await getTotalBudget();
+    final totalSpent = await getTotalSpent();
+    return totalBudget - totalSpent;
+  }
+
+  // Helper methods needed by UI
   double calculateTotalAllocated(List<BudgetItem> items) {
-    return items.fold(0, (sum, item) => sum + item.allocatedAmount);
+    return items.fold(0.0, (sum, item) => sum + item.allocatedAmount);
   }
 
   double calculateTotalSpent(List<BudgetItem> items) {
-    return items.fold(0, (sum, item) => sum + item.spentAmount);
+    return items.fold(0.0, (sum, item) => sum + item.spentAmount);
   }
 
   double calculateTotalRemaining(List<BudgetItem> items) {

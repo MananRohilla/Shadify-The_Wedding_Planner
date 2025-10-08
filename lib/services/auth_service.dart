@@ -1,57 +1,31 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../main.dart';
+﻿import 'offline_service.dart';
 
 class AuthService {
-  Future<AuthResponse> signUp({
+  Future<bool> signUp({
     required String email,
     required String password,
     required String fullName,
     String? phone,
   }) async {
-    final response = await supabase.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-        'full_name': fullName,
-        'phone': phone,
-      },
-    );
-
-    if (response.user != null) {
-      await supabase.from('profiles').insert({
-        'id': response.user!.id,
-        'email': email,
-        'full_name': fullName,
-        'phone': phone,
-      });
-    }
-
-    return response;
+    return await MockAuthService.signUp(email, password);
   }
 
-  Future<AuthResponse> signIn({
+  Future<bool> signIn({
     required String email,
     required String password,
   }) async {
-    return await supabase.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    return await MockAuthService.signIn(email, password);
   }
 
   Future<void> signOut() async {
-    await supabase.auth.signOut();
-  }
-
-  User? getCurrentUser() {
-    return supabase.auth.currentUser;
+    await MockAuthService.signOut();
   }
 
   bool isLoggedIn() {
-    return supabase.auth.currentUser != null;
+    return MockAuthService.isLoggedIn;
   }
 
-  Stream<AuthState> get authStateChanges {
-    return supabase.auth.onAuthStateChange;
+  String? getCurrentUserEmail() {
+    return MockAuthService.currentUserEmail;
   }
 }

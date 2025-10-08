@@ -30,8 +30,16 @@ class ChecklistItem {
       category: json['category'],
       isCompleted: json['is_completed'] ?? false,
       dueDate: json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] != null 
+          ? (json['created_at'] is String 
+              ? DateTime.parse(json['created_at'])
+              : (json['created_at']).toDate())
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null 
+          ? (json['updated_at'] is String 
+              ? DateTime.parse(json['updated_at'])
+              : (json['updated_at']).toDate())
+          : DateTime.now(),
     );
   }
 

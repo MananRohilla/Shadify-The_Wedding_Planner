@@ -40,7 +40,11 @@ class Venue {
       imageUrl: json['image_url'],
       amenities: List<String>.from(json['amenities'] ?? []),
       rating: (json['rating'] ?? 4.5).toDouble(),
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null 
+          ? (json['created_at'] is String 
+              ? DateTime.parse(json['created_at'])
+              : (json['created_at']).toDate())
+          : DateTime.now(),
     );
   }
 
