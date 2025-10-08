@@ -4,16 +4,11 @@ import '../models/budget_item.dart';
 import 'offline_service.dart';
 
 class BudgetService {
-  // Using offline mock service for development
-  
   Future<List<BudgetItem>> getBudgetItems() async {
     if (!MockAuthService.isLoggedIn) return [];
-
-    final mockData = await MockDataService.getCollectionAsync('budget_items');
     
-    return mockData
-        .map((data) => BudgetItem.fromJson(data))
-        .toList();
+    final mockData = await MockDataService.getCollectionAsync('budget_items');
+    return mockData.map((data) => BudgetItem.fromJson(data)).toList();
   }
 
   Future<String> addBudgetItem(BudgetItem item) async {
@@ -22,16 +17,22 @@ class BudgetService {
     final data = item.toJson();
     data.remove('id'); // Remove id as it will be generated
     
-    final docId = await MockDataService.addDocument('budget_items', data);
-    return docId;
+    // Ensure proper field mapping
+    data['user_id'] = MockAuthService.currentUserEmail ?? 'demo';
+    data['created_at'] = DateTime.now();
+    data['updated_at'] = DateTime.now();
+
+    return await MockDataService.addDocument('budget_items', data);
   }
 
   Future<void> updateBudgetItem(BudgetItem item) async {
     if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
+    
     if (item.id.isEmpty) throw Exception('Item ID is required');
 
     final data = item.toJson();
     data.remove('id'); // Don't update the ID field
+    data['updated_at'] = DateTime.now();
     
     await MockDataService.updateDocument('budget_items', item.id, data);
   }
@@ -59,7 +60,7 @@ class BudgetService {
       final allocatedAmount = (totalBudget * entry.value) / 100;
       final budgetItem = BudgetItem(
         id: '',
-        userId: MockAuthService.currentUserEmail ?? '',
+        userId: MockAuthService.currentUserEmail ?? 'demo',
         category: entry.key,
         allocatedAmount: allocatedAmount,
         spentAmount: 0.0,
@@ -89,14 +90,16 @@ class BudgetService {
 
   // Helper methods needed by UI
   double calculateTotalAllocated(List<BudgetItem> items) {
-    return items.fold(0.0, (sum, item) => sum + item.allocatedAmount);
+    return items.fold<double>(0.0, (sum, item) => sum + item.allocatedAmount);
   }
 
   double calculateTotalSpent(List<BudgetItem> items) {
-    return items.fold(0.0, (sum, item) => sum + item.spentAmount);
+    return items.fold<double>(0.0, (sum, item) => sum + item.spentAmount);
   }
 
   double calculateTotalRemaining(List<BudgetItem> items) {
-    return calculateTotalAllocated(items) - calculateTotalSpent(items);
+    final allocated = calculateTotalAllocated(items);
+    final spent = calculateTotalSpent(items);
+    return allocated - spent;
   }
 }

@@ -21,7 +21,10 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
   final _guestService = GuestService();
 
   bool _plusOne = false;
+  String _selectedRSVP = 'pending';
   bool _isLoading = false;
+
+  final List<String> _rsvpOptions = ['pending', 'confirmed', 'declined'];
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
       _phoneController.text = widget.guest!.phone ?? '';
       _dietaryController.text = widget.guest!.dietaryRestrictions ?? '';
       _plusOne = widget.guest!.plusOne;
+      _selectedRSVP = widget.guest!.rsvpStatus.toLowerCase();
     }
   }
 
@@ -51,13 +55,14 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
 
     try {
       if (widget.guest == null) {
+        // Create new guest
         final newGuest = Guest(
           id: '',
           userId: MockAuthService.currentUserEmail ?? 'demo',
           name: _nameController.text.trim(),
           email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
           phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-          rsvpStatus: 'pending',
+          rsvpStatus: _selectedRSVP,
           plusOne: _plusOne,
           dietaryRestrictions: _dietaryController.text.trim().isEmpty ? null : _dietaryController.text.trim(),
           createdAt: DateTime.now(),
@@ -65,16 +70,17 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
         );
         await _guestService.addGuest(newGuest);
       } else {
-        await _guestService.updateGuest(
-          widget.guest!.copyWith(
-            name: _nameController.text.trim(),
-            email: _emailController.text.trim(),
-            phone: _phoneController.text.trim(),
-            plusOne: _plusOne,
-            dietaryRestrictions: _dietaryController.text.trim(),
-            updatedAt: DateTime.now(),
-          ),
+        // Update existing guest
+        final updatedGuest = widget.guest!.copyWith(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+          rsvpStatus: _selectedRSVP,
+          plusOne: _plusOne,
+          dietaryRestrictions: _dietaryController.text.trim().isEmpty ? null : _dietaryController.text.trim(),
+          updatedAt: DateTime.now(),
         );
+        await _guestService.updateGuest(updatedGuest);
       }
 
       if (mounted) {
@@ -103,18 +109,16 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Name *',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter guest name';
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Name is required';
                   }
                   return null;
                 },
@@ -122,43 +126,55 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
-                  labelText: 'Email (Optional)',
+                  labelText: 'Email',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
                 ),
+                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Phone (Optional)',
+                  labelText: 'Phone',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
                 ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedRSVP,
+                decoration: const InputDecoration(
+                  labelText: 'RSVP Status',
+                  border: OutlineInputBorder(),
+                ),
+                items: _rsvpOptions.map((status) {
+                  return DropdownMenuItem(
+                    value: status,
+                    child: Text(status.toUpperCase()),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() => _selectedRSVP = value!);
+                },
+              ),
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                title: const Text('Plus One'),
+                value: _plusOne,
+                onChanged: (value) {
+                  setState(() => _plusOne = value ?? false);
+                },
+                controlAffinity: ListTileControlAffinity.leading,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _dietaryController,
                 decoration: const InputDecoration(
-                  labelText: 'Dietary Restrictions (Optional)',
+                  labelText: 'Dietary Restrictions',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.restaurant),
                 ),
                 maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              CheckboxListTile(
-                value: _plusOne,
-                onChanged: (value) {
-                  setState(() => _plusOne = value ?? false);
-                },
-                title: const Text('Plus One'),
-                subtitle: const Text('Guest can bring a companion'),
-                contentPadding: EdgeInsets.zero,
-                activeColor: const Color(0xFF4CAF50),
               ),
             ],
           ),
@@ -166,22 +182,22 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _handleSave,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4CAF50),
+            backgroundColor: const Color(0xFFE91E63),
             foregroundColor: Colors.white,
           ),
           child: _isLoading
               ? const SizedBox(
-                  height: 20,
                   width: 20,
+                  height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Save'),
+              : Text(widget.guest == null ? 'Add' : 'Update'),
         ),
       ],
     );
