@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/guest.dart';
 import '../../services/guest_service.dart';
+import '../../services/offline_service.dart';
 
 class AddGuestDialog extends StatefulWidget {
   final Guest? guest;
@@ -52,7 +53,7 @@ class _AddGuestDialogState extends State<AddGuestDialog> {
       if (widget.guest == null) {
         final newGuest = Guest(
           id: '',
-          userId: '',
+          userId: MockAuthService.currentUserEmail ?? 'demo',
           name: _nameController.text.trim(),
           email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
           phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),

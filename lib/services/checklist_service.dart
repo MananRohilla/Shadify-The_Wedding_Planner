@@ -26,12 +26,12 @@ class ChecklistService {
     if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
 
     final data = {
+      'user_id': MockAuthService.currentUserEmail ?? 'demo',
       'title': title,
       'description': description ?? '',
       'category': category,
-      'dueDate': dueDate?.toIso8601String() ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-      'isCompleted': false,
-      'priority': 'Medium',
+      'due_date': (dueDate ?? DateTime.now().add(const Duration(days: 7))).toIso8601String(),
+      'is_completed': false,
     };
 
     final docId = await MockDataService.addDocument('checklist_items', data);
@@ -46,8 +46,8 @@ class ChecklistService {
       'title': item.title,
       'description': item.description,
       'category': item.category,
-      'isCompleted': item.isCompleted,
-      'dueDate': item.dueDate?.toIso8601String(),
+      'is_completed': item.isCompleted,
+      'due_date': item.dueDate?.toIso8601String(),
     };
     
     await MockDataService.updateDocument('checklist_items', item.id, data);
@@ -57,7 +57,7 @@ class ChecklistService {
     if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
     
     await MockDataService.updateDocument('checklist_items', itemId, {
-      'isCompleted': isCompleted,
+      'is_completed': isCompleted,
     });
   }
 

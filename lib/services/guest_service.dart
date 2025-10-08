@@ -26,7 +26,7 @@ class GuestService {
 
   Future<void> updateRSVPStatus(String guestId, String status) async {
     if (!MockAuthService.isLoggedIn) throw Exception('User not authenticated');
-    await MockDataService.updateDocument('guests', guestId, {'rsvpStatus': status});
+    await MockDataService.updateDocument('guests', guestId, {'rsvp_status': status});
   }
 
   Future<void> deleteGuest(String guestId) async {
